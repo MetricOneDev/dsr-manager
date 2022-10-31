@@ -1,5 +1,4 @@
 // DsrManager.sol
-// Copyright (C) 2020 Maker Ecosystem Growth Holdings, INC.
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as published by
@@ -30,7 +29,7 @@ interface PotLike {
 }
 
 interface JoinLike {
-    function dai() external view returns (address);
+    function stbl() external view returns (address);
     function join(address, uint256) external;
     function exit(address, uint256) external;
 }
@@ -42,8 +41,8 @@ interface GemLike {
 
 contract DsrManager {
     PotLike  public pot;
-    GemLike  public dai;
-    JoinLike public daiJoin;
+    GemLike  public stbl;
+    JoinLike public stblJoin;
 
     uint256 public supply;
 
@@ -75,36 +74,36 @@ contract DsrManager {
         z = add(mul(x, RAY), sub(y, 1)) / y;
     }
 
-    constructor(address pot_, address daiJoin_) public {
+    constructor(address pot_, address stblJoin_) public {
         pot = PotLike(pot_);
-        daiJoin = JoinLike(daiJoin_);
-        dai = GemLike(daiJoin.dai());
+        stblJoin = JoinLike(stblJoin_);
+        stbl = GemLike(stblJoin.stbl());
 
         VatLike vat = VatLike(pot.vat());
-        vat.hope(address(daiJoin));
+        vat.hope(address(stblJoin));
         vat.hope(address(pot));
-        dai.approve(address(daiJoin), uint256(-1));
+        stbl.approve(address(stblJoin), uint256(-1));
     }
 
-    function daiBalance(address usr) external returns (uint256 wad) {
+    function stblBalance(address usr) external returns (uint256 wad) {
         uint256 chi = (now > pot.rho()) ? pot.drip() : pot.chi();
         wad = rmul(chi, pieOf[usr]);
     }
 
-    // wad is denominated in dai
+    // wad is denominated in stbl
     function join(address dst, uint256 wad) external {
         uint256 chi = (now > pot.rho()) ? pot.drip() : pot.chi();
         uint256 pie = rdiv(wad, chi);
         pieOf[dst] = add(pieOf[dst], pie);
         supply = add(supply, pie);
 
-        dai.transferFrom(msg.sender, address(this), wad);
-        daiJoin.join(address(this), wad);
+        stbl.transferFrom(msg.sender, address(this), wad);
+        stblJoin.join(address(this), wad);
         pot.join(pie);
         emit Join(dst, wad);
     }
 
-    // wad is denominated in dai
+    // wad is denominated in stbl
     function exit(address dst, uint256 wad) external {
         uint256 chi = (now > pot.rho()) ? pot.drip() : pot.chi();
         uint256 pie = rdivup(wad, chi);
@@ -116,7 +115,7 @@ contract DsrManager {
 
         pot.exit(pie);
         uint256 amt = rmul(chi, pie);
-        daiJoin.exit(dst, amt);
+        stblJoin.exit(dst, amt);
         emit Exit(dst, amt);
     }
 
@@ -129,7 +128,7 @@ contract DsrManager {
 
         pot.exit(pie);
         uint256 amt = rmul(chi, pie);
-        daiJoin.exit(dst, amt);
+        stblJoin.exit(dst, amt);
         emit Exit(dst, amt);
     }
 }
