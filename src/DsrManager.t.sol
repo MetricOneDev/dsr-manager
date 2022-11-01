@@ -12,10 +12,10 @@ contract DsrManagerTest is DssDeployTestBase {
         deploy();
         manager = new DsrManager(address(pot), address(stblJoin));
 
-        weth.mint(1 ether);
-        weth.approve(address(ethJoin), uint(-1));
-        ethJoin.join(address(this), 1 ether);
-        vat.frob("STBL", address(this), address(this), address(this), 1 ether, 50 ether);
+        wcoin.mint(1 ether);
+        wcoin.approve(address(coinJoin), uint(-1));
+        coinJoin.join(address(this), 1 ether);
+        vat.frob("COIN", address(this), address(this), address(this), 1 ether, 50 ether);
         vat.hope(address(stblJoin));
         stblJoin.exit(address(this), 50 ether);
         stbl.approve(address(manager), 50 ether);
